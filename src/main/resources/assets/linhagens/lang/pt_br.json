@@ -1,0 +1,22 @@
+{
+  "itemGroup.linhagens": "Linhagens",
+  "item.linhagens.katana_espadachim": "Katana do Espadachim Inexperiente",
+  "item.linhagens.machado_lenhador": "Machado de Lenhador",
+  "item.linhagens.machado_desastre": "Machado do Desastre",
+  "item.linhagens.aurora_shard": "Fragmento da Aurora",
+  "item.linhagens.aurora_helmet": "Elmo da Aurora",
+  "item.linhagens.aurora_chestplate": "Peitoral da Aurora",
+  "item.linhagens.aurora_leggings": "Calças da Aurora",
+  "item.linhagens.aurora_boots": "Botas da Aurora",
+  "item.linhagens.imp_infernal_spawn_egg": "Ovo de Imp Infernal",
+  "item.linhagens.espadachim_sombrio_spawn_egg": "Ovo de Espadachim Sombrio",
+  "item.linhagens.aurora_guardian_spawn_egg": "Ovo de Guardião da Aurora",
+  "block.linhagens.aurora_core": "Núcleo da Aurora",
+  "entity.linhagens.imp_infernal": "Imp Infernal",
+  "entity.linhagens.espadachim_sombrio": "Espadachim Sombrio",
+  "entity.linhagens.aurora_guardian": "Guardião da Aurora",
+  "key.categories.linhagens": "Linhagens",
+  "key.linhagens.menu": "Abrir menu de raça",
+  "key.linhagens.ability1": "Habilidade 1",
+  "key.linhagens.ability2": "Habilidade 2"
+}

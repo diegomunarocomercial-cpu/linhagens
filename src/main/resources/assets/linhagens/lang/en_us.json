@@ -1,0 +1,22 @@
+{
+  "itemGroup.linhagens": "Linhagens",
+  "item.linhagens.katana_espadachim": "Novice Swordsman's Katana",
+  "item.linhagens.machado_lenhador": "Lumberjack's Axe",
+  "item.linhagens.machado_desastre": "Axe of Disaster",
+  "item.linhagens.aurora_shard": "Aurora Shard",
+  "item.linhagens.aurora_helmet": "Aurora Helmet",
+  "item.linhagens.aurora_chestplate": "Aurora Chestplate",
+  "item.linhagens.aurora_leggings": "Aurora Leggings",
+  "item.linhagens.aurora_boots": "Aurora Boots",
+  "item.linhagens.imp_infernal_spawn_egg": "Infernal Imp Spawn Egg",
+  "item.linhagens.espadachim_sombrio_spawn_egg": "Shadow Swordsman Spawn Egg",
+  "item.linhagens.aurora_guardian_spawn_egg": "Aurora Guardian Spawn Egg",
+  "block.linhagens.aurora_core": "Aurora Core",
+  "entity.linhagens.imp_infernal": "Infernal Imp",
+  "entity.linhagens.espadachim_sombrio": "Shadow Swordsman",
+  "entity.linhagens.aurora_guardian": "Aurora Guardian",
+  "key.categories.linhagens": "Linhagens",
+  "key.linhagens.menu": "Open race menu",
+  "key.linhagens.ability1": "Ability 1",
+  "key.linhagens.ability2": "Ability 2"
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "linhagens",
+  "version": "${version}",
+  "name": "Linhagens",
+  "description": "Mod de RPG: escolha sua raça (Humano, Demônio, Anjo, Piglin), mude sua aparência, ganhe passivas, habilidades, mana e níveis.",
+  "authors": ["Você"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.linhagens.Linhagens"],
+    "client": ["com.linhagens.client.LinhagensClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

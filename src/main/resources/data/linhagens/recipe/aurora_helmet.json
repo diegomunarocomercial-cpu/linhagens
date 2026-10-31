@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SSS",
+    "S S"
+  ],
+  "key": {
+    "S": {
+      "item": "linhagens:aurora_shard"
+    }
+  },
+  "result": {
+    "id": "linhagens:aurora_helmet",
+    "count": 1
+  }
+}
