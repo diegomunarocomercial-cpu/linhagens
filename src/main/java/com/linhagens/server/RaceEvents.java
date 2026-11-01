@@ -19,6 +19,7 @@ public final class RaceEvents {
             RaceManager.sendAllTo(p);
             RaceManager.broadcast(p);
             RaceManager.sendState(p, true);
+            SkillManager.sendSkills(p);
             if (RaceManager.get(p).race() == null) {
                 ServerPlayNetworking.send(p, OpenMenuPayload.INSTANCE);
             }
@@ -32,6 +33,7 @@ public final class RaceEvents {
             RaceManager.broadcast(newPlayer);
             RaceManager.sendAllTo(newPlayer);
             RaceManager.sendState(newPlayer, true);
+            SkillManager.sendSkills(newPlayer);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -48,6 +50,9 @@ public final class RaceEvents {
                 if (r != null) {
                     int gain = Math.max(3, (int) (killed.getMaxHealth() / 2f));
                     RaceManager.addRaceXp(p, gain);
+                    if (com.linhagens.race.SkillEffects.of(RaceManager.get(p)).has(com.linhagens.race.Perk.LOOTER)) {
+                        killed.dropStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLD_NUGGET, 1 + world.random.nextInt(3)));
+                    }
                 }
             }
         });

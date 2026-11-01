@@ -36,6 +36,11 @@ public final class RaceHud {
         ctx.fill(x + 1, y + 18, x + 1 + (int) ((bw - 2) * Math.min(1f, mf)), y + 24, 0xFF3A7BFF);
         ctx.drawTextWithShadow(tr, Text.literal(s.mana() + "/" + s.maxMana()), x + bw + 4, y + 17, 0xA8C8FF);
 
+        int pts = RaceData.pointsFor(s.level(), RaceClient.skills.size());
+        if (pts > 0) {
+            ctx.drawTextWithShadow(tr, Text.literal("+" + pts + " ponto(s) de habilidade [K]"), x, y + 49, 0xFFD34D);
+        }
+
         // Habilidades
         for (int slot = 0; slot < 2; slot++) {
             Race.Ability ab = r.abilities[slot];

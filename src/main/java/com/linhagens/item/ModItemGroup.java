@@ -30,9 +30,14 @@ public final class ModItemGroup {
                     entries.add(ModItems.AURORA_LEGGINGS);
                     entries.add(ModItems.AURORA_BOOTS);
                     entries.add(ModItems.AURORA_CORE);
+                    entries.add(ModItems.BRACO_POCO);
+                    entries.add(ModItems.ICE_DRAGON_EGG);
                     entries.add(ModItems.IMP_SPAWN_EGG);
                     entries.add(ModItems.SHADOW_SPAWN_EGG);
                     entries.add(ModItems.GUARDIAN_SPAWN_EGG);
+                    entries.add(ModItems.OCULTISTA_SPAWN_EGG);
+                    entries.add(ModItems.ICE_DRAGON_SPAWN_EGG);
+                    entries.add(ModItems.ICE_DRAGON_BABY_SPAWN_EGG);
                 })
                 .build());
     }

@@ -9,6 +9,7 @@ import com.linhagens.net.ModNetworking;
 import com.linhagens.server.LinhagemCommand;
 import com.linhagens.server.ModAttachments;
 import com.linhagens.server.RaceEvents;
+import com.linhagens.server.SkillEvents;
 import com.linhagens.server.WeaponEvents;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -36,6 +37,7 @@ public class Linhagens implements ModInitializer {
         ModNetworking.registerServerReceivers();
         RaceEvents.register();
         WeaponEvents.register();
+        SkillEvents.register();
         LinhagemCommand.register();
     }
 }

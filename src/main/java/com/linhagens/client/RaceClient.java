@@ -3,7 +3,9 @@ package com.linhagens.client;
 import com.linhagens.net.StatePayload;
 import com.linhagens.race.Race;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -14,6 +16,8 @@ public final class RaceClient {
 
     private static final Map<UUID, Race> RACES = new HashMap<>();
     public static StatePayload state = null;
+    /** Habilidades desbloqueadas pelo jogador local. */
+    public static Set<String> skills = new HashSet<>();
 
     /** Usado pelo menu: faz o jogador local ser desenhado com a raça "prévia". */
     public static boolean previewActive = false;
@@ -38,5 +42,6 @@ public final class RaceClient {
     public static void clear() {
         RACES.clear();
         state = null;
+        skills = new HashSet<>();
     }
 }

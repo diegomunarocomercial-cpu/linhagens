@@ -4,9 +4,11 @@ import com.linhagens.Linhagens;
 import com.linhagens.entity.ModEntities;
 import com.linhagens.net.OpenMenuPayload;
 import com.linhagens.net.RaceSyncPayload;
+import com.linhagens.net.SkillsPayload;
 import com.linhagens.net.StatePayload;
 import com.linhagens.net.UseAbilityPayload;
 import com.linhagens.race.Race;
+import java.util.HashSet;
 import java.util.UUID;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -24,6 +26,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class LinhagensClient implements ClientModInitializer {
     public static KeyBinding OPEN_MENU;
+    public static KeyBinding OPEN_SKILLS;
     public static KeyBinding ABILITY_1;
     public static KeyBinding ABILITY_2;
 
@@ -31,6 +34,8 @@ public class LinhagensClient implements ClientModInitializer {
     public void onInitializeClient() {
         OPEN_MENU = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.linhagens.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.linhagens"));
+        OPEN_SKILLS = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.linhagens.skills", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "key.categories.linhagens"));
         ABILITY_1 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.linhagens.ability1", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.linhagens"));
         ABILITY_2 = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -39,6 +44,9 @@ public class LinhagensClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             while (OPEN_MENU.wasPressed()) {
                 if (mc.player != null && mc.currentScreen == null) mc.setScreen(new RaceSelectScreen());
+            }
+            while (OPEN_SKILLS.wasPressed()) {
+                if (mc.player != null && mc.currentScreen == null) mc.setScreen(new SkillTreeScreen());
             }
             while (ABILITY_1.wasPressed()) {
                 if (mc.player != null && mc.currentScreen == null) ClientPlayNetworking.send(new UseAbilityPayload(0));
@@ -58,6 +66,12 @@ public class LinhagensClient implements ClientModInitializer {
                 }));
         ClientPlayNetworking.registerGlobalReceiver(StatePayload.ID, (payload, ctx) ->
                 ctx.client().execute(() -> RaceClient.state = payload));
+        ClientPlayNetworking.registerGlobalReceiver(SkillsPayload.ID, (payload, ctx) ->
+                ctx.client().execute(() -> {
+                    HashSet<String> set = new HashSet<>();
+                    for (String id : payload.csv().split(",")) if (!id.isEmpty()) set.add(id);
+                    RaceClient.skills = set;
+                }));
         ClientPlayNetworking.registerGlobalReceiver(OpenMenuPayload.ID, (payload, ctx) ->
                 ctx.client().execute(() -> ctx.client().setScreen(new RaceSelectScreen())));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> RaceClient.clear());
@@ -71,6 +85,12 @@ public class LinhagensClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.SHADOW_SWORDSMAN,
                 ctx -> new BipedMobRenderer<>(ctx, Linhagens.id("textures/entity/espadachim_sombrio.png")));
         EntityRendererRegistry.register(ModEntities.AURORA_GUARDIAN, AuroraGuardianRenderer::new);
+
+        EntityRendererRegistry.register(ModEntities.OCULTISTA, CultistRenderer::new);
+        EntityRendererRegistry.register(ModEntities.ICE_DRAGON, IceDragonRenderer::new);
+        EntityRendererRegistry.register(ModEntities.ICE_DRAGON_BABY, IceDragonRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(IceDragonModel.LAYER, IceDragonModel::createModel);
+        EntityModelLayerRegistry.registerModelLayer(CultistModel.LAYER, CultistModel::createModel);
 
         // Skins das raças (camada extra no renderizador de jogadores)
         EntityModelLayerRegistry.registerModelLayer(RaceModel.CLASSIC, () -> RaceModel.createModel(false));

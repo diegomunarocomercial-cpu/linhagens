@@ -57,6 +57,16 @@ public final class ModItems {
 
     public static final Item AURORA_CORE = register("aurora_core", new BlockItem(ModBlocks.AURORA_CORE, new Item.Settings().rarity(Rarity.EPIC)));
 
+    public static final Item BRACO_POCO = register("braco_poco", new BlockItem(ModBlocks.BRACO_POCO, new Item.Settings().rarity(Rarity.RARE)));
+    public static final Item ICE_DRAGON_EGG = register("ice_dragon_egg", new BlockItem(ModBlocks.ICE_DRAGON_EGG, new Item.Settings().rarity(Rarity.EPIC)));
+
+    public static final Item OCULTISTA_SPAWN_EGG = register("ocultista_diablos_spawn_egg",
+            new SpawnEggItem(ModEntities.OCULTISTA, 0x8E0F1B, 0xE0B040, new Item.Settings()));
+    public static final Item ICE_DRAGON_SPAWN_EGG = register("ice_dragon_spawn_egg",
+            new SpawnEggItem(ModEntities.ICE_DRAGON, 0x9FD8F5, 0xFFFFFF, new Item.Settings()));
+    public static final Item ICE_DRAGON_BABY_SPAWN_EGG = register("ice_dragon_baby_spawn_egg",
+            new SpawnEggItem(ModEntities.ICE_DRAGON_BABY, 0xBFE6F8, 0x4A9BD0, new Item.Settings()));
+
     public static final Item IMP_SPAWN_EGG = register("imp_infernal_spawn_egg",
             new SpawnEggItem(ModEntities.IMP, 0xB02A2A, 0xFFB000, new Item.Settings()));
     public static final Item SHADOW_SPAWN_EGG = register("espadachim_sombrio_spawn_egg",
