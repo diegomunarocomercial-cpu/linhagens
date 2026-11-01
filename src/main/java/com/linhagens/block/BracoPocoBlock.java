@@ -45,7 +45,7 @@ public class BracoPocoBlock extends Block {
     @Override
     protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos,
                                              PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!stack.isOf(Items.EMERALD)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
+        if (!stack.isOf(Items.EMERALD)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         if (!world.isClient && world instanceof ServerWorld sw) {
             stack.decrementUnlessCreative(1, player);
             int r = world.random.nextInt(100);
