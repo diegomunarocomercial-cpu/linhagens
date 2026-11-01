@@ -27,14 +27,12 @@ Se a versão do Fabric API do `gradle.properties` não existir, pegue a mais rec
 - `client/` menu, HUD, renderização da skin (RaceModel + RaceLayer)
 - `tools/gerar_texturas.py` gera os PNGs 128x128; você também pode pintá-los à mão (layout no topo do script)
 
-## Novidades (v2)
-- **Vila Aurora**: vila média com praça, fonte e o *Núcleo da Aurora* no centro (a aurora roxa dança no céu sobre ela), 6 casas
-  (biblioteca, ferraria...), torre de observação, fazenda, aldeões e Guardiões da Aurora. Aparece em planícies, florestas, taigas e prados.
-  Para achar: `/locate structure linhagens:vila_aurora` (ou `/place structure linhagens:vila_aurora` para criar uma na sua frente).
-- **Armas** (equilibradas): Katana (5 dano, 2.2 vel; golpes dão Velocidade; botão direito = avanço cortante),
-  Machado de Lenhador (8 dano, 1.0 vel; derruba árvores inteiras; resiste a empurrão),
-  Machado do Desastre (11 dano, 0.9 vel; golpes racham em área; botão direito = Cataclismo, custa 2 corações).
-- **Armadura da Aurora** (4 peças, feita com Fragmentos da Aurora): bônus de conjunto de velocidade, regeneração e visão noturna à noite.
-- **Mobs**: Imp Infernal (Nether), Espadachim Sombrio (escuro do Overworld, usa a Katana), Guardião da Aurora (golem da vila).
-- **Aba criativa "Linhagens"** com tudo (inclusive ovos de spawn).
-- Regerar arte/estrutura: `python3 tools/gerar_itens.py` e `python3 tools/gerar_vila.py`.
+## Novidades (v3)
+- **Árvore de habilidades** (tecla **K**): 1 ponto por nível (até o 20), 3 ramos (Ataque, Defesa, Maestria) por raça, cada um com um poder final exclusivo.
+- **Vila Aurora** (reformulada): vila normal com 6 casas simples, 5 médias, 1 casa grande (chefe), poço com o **Braço do Poço** (entregue uma esmeralda!)
+  e 5 plantações. O Núcleo da Aurora fica enterrado sob o poço e faz uma aurora boreal enorme dançar no céu.
+- **Castelo de Gelo**: muralhas, 4 torres, pátio, Salão Principal (2 filhotes atacam) e Sala do Chefe (Dragão de Gelo Ancestral, 1 a 3 ovos ao morrer).
+  Procure com `/locate structure linhagens:castelo_gelo`.
+- **Mobs novos**: Dragão de Gelo (chefe e filhote, com sopro gélido), Ocultista do Culto Diablos (capa vermelha, maldição e invoca imps).
+- **Texturas melhoradas** de armas, armadura e mobs; nomes 100% em português.
+- Regerar arte/estruturas: `python3 tools/gerar_itens.py`, `python3 tools/gerar_vila.py`, `python3 tools/gerar_castelo.py`.

@@ -1,376 +1,337 @@
 #!/usr/bin/env python3
-"""Gera a estrutura "Vila Aurora" (data/linhagens/structure/vila_aurora.nbt). Rode: python3 tools/gerar_vila.py
-Tudo é construído por código: edite os parâmetros de casas/torre/fazenda abaixo para mudar a vila."""
-import gzip, math, os, random, struct
+"""Gera a Vila Aurora (uma vila "normal": 6 casas simples, 5 médias, 1 grande do chefe, poço com o Braço, 5 plantações).
+O Núcleo da Aurora fica ENTERRADO sob o poço: é ele que faz a aurora aparecer no céu. Rode: python3 tools/gerar_vila.py"""
+import math, os, random, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from estruturas import *
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "main", "resources", "data", "linhagens", "structure", "vila_aurora.nbt")
+SX = SZ = 80
+S = 3
+SY = S + 21
+W = World(SX, SY, SZ)
+rnd = random.Random(1234)
+occ = set()
+C = 40  # centro
 
-# ---------------------------------------------------------------- NBT mínimo
-class Int:
-    def __init__(s, v): s.v = v
-class Byte:
-    def __init__(s, v): s.v = v
-class Dbl:
-    def __init__(s, v): s.v = v
-class Str:
-    def __init__(s, v): s.v = v
-class Lst:
-    def __init__(s, t, items): s.t, s.items = t, items
-class Comp:
-    def __init__(s, d): s.d = d
-
-TID = {Byte: 1, Int: 3, Dbl: 6, Str: 8, Lst: 9, Comp: 10}
-
-def enc_str(x):
-    b = x.encode("utf-8")
-    return struct.pack(">H", len(b)) + b
-
-def enc(v):
-    if isinstance(v, Int): return struct.pack(">i", v.v)
-    if isinstance(v, Byte): return struct.pack(">b", v.v)
-    if isinstance(v, Dbl): return struct.pack(">d", v.v)
-    if isinstance(v, Str): return enc_str(v.v)
-    if isinstance(v, Lst):
-        return struct.pack(">bi", v.t, len(v.items)) + b"".join(enc(i) for i in v.items)
-    if isinstance(v, Comp):
-        out = b""
-        for k, x in v.d.items():
-            out += struct.pack(">b", TID[type(x)]) + enc_str(k) + enc(x)
-        return out + b"\x00"
-    raise TypeError(v)
-
-# ---------------------------------------------------------------- mundo
-SX = SZ = 45
-S = 5            # camada da superfície (y do bloco de grama)
-SY = S + 22
-B = {}           # (x,y,z) -> (nome, props, nbt)
-ENT = []         # entidades
-rnd = random.Random(2026)
-M = "minecraft:"
-
-
-def put(x, y, z, name, nbt=None, **props):
-    if not name.startswith(("minecraft:", "linhagens:")):
-        name = M + name
-    B[(x, y, z)] = (name, tuple(sorted((k, str(v).lower() if isinstance(v, bool) else str(v)) for k, v in props.items())), nbt)
-
-
-def get(x, y, z):
-    return B.get((x, y, z), (M + "air", (), None))[0]
-
-
-# base: fundação + grama + ar (limpa árvores/relevo dentro da vila)
+# ----------------------------------------------------------- terreno base
 for x in range(SX):
     for z in range(SZ):
         for y in range(0, S):
-            put(x, y, z, "dirt")
-        put(x, S, z, "grass_block")
+            W.put(x, y, z, "dirt")
+        W.put(x, S, z, "grass_block")
         for y in range(S + 1, SY):
-            put(x, y, z, "air")
+            W.put(x, y, z, "air")
 
-occ = set()   # colunas ocupadas (para espalhar flores só no que sobrou)
-C = 22
-
-# ---------------------------------------------------------------- estradas e praça
 def road_block():
     r = rnd.random()
-    return "gravel" if r < 0.18 else ("coarse_dirt" if r < 0.3 else "dirt_path")
+    return "gravel" if r < 0.12 else ("coarse_dirt" if r < 0.22 else "dirt_path")
 
 for i in range(SX):
-    for dz in (-1, 0, 1):
-        put(i, S, C + dz, road_block()); occ.add((i, C + dz))
-        put(C + dz, S, i, road_block()); occ.add((C + dz, i))
+    for d in (-1, 0, 1):
+        W.put(i, S, C + d, road_block()); occ.add((i, C + d))
+        if i >= 23:
+            W.put(C + d, S, i, road_block()); occ.add((C + d, i))
 
-for x in range(SX):
-    for z in range(SZ):
-        d = math.hypot(x - C, z - C)
-        if d <= 7.6:
-            occ.add((x, z))
-            if d > 6.0:
-                put(x, S, z, rnd.choice(["stone_bricks", "stone_bricks", "cracked_stone_bricks", "mossy_stone_bricks"]))
-            elif d > 3.9:
-                put(x, S, z, "polished_deepslate")
-            else:
-                put(x, S, z, "polished_andesite")
-
-# fonte com o Núcleo da Aurora
-for dx in range(-3, 4):
-    for dz in range(-3, 4):
-        m = max(abs(dx), abs(dz))
-        if m == 3:
-            put(C + dx, S + 1, C + dz, "polished_blackstone_bricks")
-        elif m <= 2:
-            put(C + dx, S, C + dz, "water", level=0)
-put(C, S, C, "polished_blackstone_bricks")
-put(C, S + 1, C, "polished_blackstone_bricks")
-put(C, S + 2, C, "amethyst_block")
-put(C, S + 3, C, "linhagens:aurora_core")
-put(C, S + 4, C, "amethyst_block")
-put(C, S + 5, C, "amethyst_cluster", facing="up", waterlogged=False)
-put(C, S + 6, C, "end_rod", facing="up")
-for dx, dz in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-    put(C + dx, S + 1, C + dz, "amethyst_cluster", facing="up", waterlogged=False)
-
-# postes de luz em volta da praça
-for dx, dz in [(-6, -6), (6, -6), (-6, 6), (6, 6), (-10, 0), (10, 0), (0, -10), (0, 10)]:
-    x, z = C + dx, C + dz
-    for y in range(S + 1, S + 4):
-        put(x, y, z, "spruce_fence")
-    put(x, S + 4, z, "lantern", hanging=False, waterlogged=False)
-    occ.add((x, z))
-
-# ---------------------------------------------------------------- casas
-CHEST = Comp({"id": Str("minecraft:chest"), "LootTable": Str("linhagens:chests/vila_aurora")})
+def path_v(x, z_from, z_to):
+    step = 1 if z_to >= z_from else -1
+    for z in range(z_from, z_to + step, step):
+        W.put(x, S, z, "dirt_path"); occ.add((x, z))
 
 def villager(x, z, y=None):
-    y = S + 1 if y is None else y
-    ENT.append((x + 0.5, y, z + 0.5, Comp({
-        "id": Str("minecraft:villager"), "PersistenceRequired": Byte(1),
-        "VillagerData": Comp({"level": Int(1), "profession": Str("minecraft:none"), "type": Str("minecraft:plains")})})))
+    W.entity(x + 0.5, S + 1 if y is None else y, z + 0.5, villager_nbt())
 
-def guardian(x, z):
-    ENT.append((x + 0.5, S + 1, z + 0.5, Comp({"id": Str("linhagens:aurora_guardian"), "PersistenceRequired": Byte(1)})))
-
-
-def house(x0, z0, W, D, door, kind):
-    x1, z1 = x0 + W - 1, z0 + D - 1
+# ----------------------------------------------------------- casas
+def house(x0, z0, Wd, D, door, kind, roof="spruce", hw=4, chimney=False):
+    x1, z1 = x0 + Wd - 1, z0 + D - 1
     for x in range(x0 - 1, x1 + 2):
         for z in range(z0 - 1, z1 + 2):
             occ.add((x, z))
     for x in range(x0, x1 + 1):
         for z in range(z0, z1 + 1):
-            put(x, S, z, "spruce_planks")
-    xd = x0 + W // 2
+            W.put(x, S, z, "oak_planks")
+    xd = x0 + Wd // 2
     zd = z1 if door == "S" else z0
-    for y in range(S + 1, S + 5):
+    for y in range(S + 1, S + 1 + hw):
         for x in range(x0, x1 + 1):
             for z in range(z0, z1 + 1):
                 if x not in (x0, x1) and z not in (z0, z1):
                     continue
-                corner = x in (x0, x1) and z in (z0, z1)
-                if corner:
-                    put(x, y, z, "stripped_dark_oak_log", axis="y")
+                if x in (x0, x1) and z in (z0, z1):
+                    W.put(x, y, z, "oak_log", axis="y")
                 elif y == S + 1:
-                    put(x, y, z, "stone_bricks")
+                    W.put(x, y, z, "cobblestone")
                 else:
                     off = (x - x0) if z in (z0, z1) else (z - z0)
                     if y in (S + 2, S + 3) and off % 4 == 2 and not (x == xd and z == zd):
-                        put(x, y, z, "purple_stained_glass_pane", waterlogged=False)
+                        W.put(x, y, z, "glass_pane", waterlogged=False)
                     else:
-                        put(x, y, z, "spruce_planks")
+                        W.put(x, y, z, "oak_planks")
     face = "south" if door == "S" else "north"
-    put(xd, S + 1, zd, "spruce_door", facing=face, half="lower", hinge="left", open=False, powered=False)
-    put(xd, S + 2, zd, "spruce_door", facing=face, half="upper", hinge="left", open=False, powered=False)
-    # teto
+    W.put(xd, S + 1, zd, "oak_door", facing=face, half="lower", hinge="left", open=False, powered=False)
+    W.put(xd, S + 2, zd, "oak_door", facing=face, half="upper", hinge="left", open=False, powered=False)
+    top = S + 1 + hw
     for x in range(x0, x1 + 1):
         for z in range(z0, z1 + 1):
-            put(x, S + 5, z, "spruce_planks")
+            W.put(x, top, z, "oak_planks")
     R = D + 2
     for r in range(R):
         z = z0 - 1 + r
         k = min(r, R - 1 - r)
-        y = S + 5 + k
-        for x in range(x0 - 1, x1 + 2):
+        y = top + k
+        for x in range(x0, x1 + 1):
             if r < R - 1 - r:
-                put(x, y, z, "dark_oak_stairs", facing="north", half="bottom", shape="straight", waterlogged=False)
+                W.put(x, y, z, f"{roof}_stairs", facing="north", half="bottom", shape="straight", waterlogged=False)
             elif r > R - 1 - r:
-                put(x, y, z, "dark_oak_stairs", facing="south", half="bottom", shape="straight", waterlogged=False)
+                W.put(x, y, z, f"{roof}_stairs", facing="south", half="bottom", shape="straight", waterlogged=False)
             else:
-                put(x, y, z, "dark_oak_planks")
+                W.put(x, y, z, f"{roof}_planks")
     for z in range(z0, z1 + 1):
         r = z - (z0 - 1)
         k = min(r, R - 1 - r)
-        for y in range(S + 6, S + 5 + k):
+        for y in range(top + 1, top + k):
             for x in (x0, x1):
-                put(x, y, z, "purple_terracotta")
+                W.put(x, y, z, "oak_planks")
+    if chimney:
+        cz = z0 + D // 2
+        for y in range(S + 1, top + (R // 2) + 2):
+            W.put(x1 + 1, y, cz, "cobblestone")
+        W.put(x1 + 1, S + 1, cz, "cobblestone")
+        W.put(x1 + 1, top + (R // 2) + 1, cz, "campfire", facing="north", lit=True, signal_fire=False, waterlogged=False)
     # caminho até a estrada
     if door == "S":
-        for z in range(z1 + 1, C - 1):
-            put(xd, S, z, "dirt_path"); occ.add((xd, z))
+        path_v(xd, z1 + 1, C - 2)
     else:
-        for z in range(z0 - 1, C + 1, -1):
-            put(xd, S, z, "dirt_path"); occ.add((xd, z))
+        path_v(xd, z0 - 1, C + 2)
     # interior
     back_z = z0 + 1 if door == "S" else z1 - 1
     fd = 1 if door == "S" else -1
     fz = "south" if fd == 1 else "north"
-    cx, cz = x0 + W // 2, z0 + D // 2
-    put(cx, S + 4, cz, "lantern", hanging=True, waterlogged=False)
-    if kind in ("home", "home2"):
-        bed = "purple_bed" if kind == "home" else "red_bed"
-        put(x0 + 1, S + 1, back_z, bed, facing="east", occupied=False, part="foot")
-        put(x0 + 2, S + 1, back_z, bed, facing="east", occupied=False, part="head")
-        put(x1 - 1, S + 1, back_z, "chest", nbt=CHEST, facing=fz, type="single", waterlogged=False)
-        put(x1 - 2, S + 1, back_z, "crafting_table")
-        put(x1 - 1, S + 1, back_z + fd, "furnace", facing=fz, lit=False)
-        for dx in (-1, 0, 1):
-            put(cx + dx, S + 1, cz, "purple_carpet")
-        villager(cx, cz + fd)
-    elif kind == "library":
-        for x in range(x0 + 1, x1):
-            for y in (S + 1, S + 2):
-                put(x, y, back_z, "bookshelf")
-        put(cx, S + 1, back_z + fd, "lectern", facing=fz, has_book=False, powered=False)
-        put(cx, S + 1, cz, "enchanting_table")
-        put(x1 - 1, S + 1, cz + fd, "chest", nbt=CHEST, facing=fz, type="single", waterlogged=False)
-        villager(cx - 1, cz + fd)
-        villager(cx + 1, cz + fd)
-    elif kind == "smithy":
-        put(x0 + 1, S + 1, back_z, "blast_furnace", facing=fz, lit=False)
-        put(x0 + 2, S + 1, back_z, "smithing_table")
-        put(x0 + 3, S + 1, back_z, "grindstone", face="floor", facing=fz)
-        put(x1 - 1, S + 1, back_z, "anvil", facing="east")
-        put(x1 - 2, S + 1, back_z, "cauldron")
-        put(x1 - 1, S + 1, back_z + fd, "chest", nbt=CHEST, facing=fz, type="single", waterlogged=False)
-        villager(cx, cz + fd)
+    cx, cz2 = x0 + Wd // 2, z0 + D // 2
+    W.put(cx, top - 1, cz2, "lantern", hanging=True, waterlogged=False)
+    W.put(x0 + 1, S + 1, back_z, "red_bed", facing="east", occupied=False, part="foot")
+    W.put(x0 + 2, S + 1, back_z, "red_bed", facing="east", occupied=False, part="head")
+    W.put(x1 - 1, S + 1, back_z, "crafting_table")
+    if kind == "medium":
+        W.put(x1 - 2, S + 1, back_z, "chest", nbt=CHEST_VILA, facing=fz, type="single", waterlogged=False)
+        W.put(x1 - 1, S + 1, back_z + fd, "furnace", facing=fz, lit=False)
+        W.put(x1 - 1, S + 1, back_z + 2 * fd, "bookshelf")
+        W.put(x1 - 1, S + 2, back_z + 2 * fd, "bookshelf")
+        W.put(x0 + 1, S + 1, back_z + fd * 2, "white_carpet")
+        W.put(cx, S + 1, cz2, "oak_fence")
+        W.put(cx, S + 2, cz2, "oak_pressure_plate")
+        villager(cx - 1, cz2)
+    else:
+        W.put(x1 - 1, S + 1, back_z + fd, "oak_fence")
+        W.put(x1 - 1, S + 2, back_z + fd, "oak_pressure_plate")
+        villager(cx, cz2)
+    return xd
 
+def medium(x0, z0, door):  # 8 x 7
+    house(x0, z0, 8, 7, door, "medium", roof="spruce", chimney=True)
 
-def tower(x0, z0):
-    x1, z1 = x0 + 4, z0 + 4
-    for x in range(x0 - 1, x1 + 2):
-        for z in range(z0 - 1, z1 + 2):
+def simple(x0, z0, door):  # 5 x 6
+    house(x0, z0, 5, 6, door, "simple", roof="oak")
+
+# ----------------------------------------------------------- casa grande do chefe (2 andares)
+def chief(x0, z0):
+    Wd, D = 13, 11
+    x1, z1 = x0 + Wd - 1, z0 + D - 1
+    for x in range(x0 - 2, x1 + 3):
+        for z in range(z0 - 2, z1 + 5):
             occ.add((x, z))
     for x in range(x0, x1 + 1):
         for z in range(z0, z1 + 1):
-            put(x, S, z, "stone_bricks")
-    top = S + 12
-    for y in range(S + 1, top + 1):
+            W.put(x, S, z, "spruce_planks")
+    xd = x0 + Wd // 2
+    hw = 8
+    for y in range(S + 1, S + 1 + hw):
         for x in range(x0, x1 + 1):
             for z in range(z0, z1 + 1):
                 if x not in (x0, x1) and z not in (z0, z1):
                     continue
-                corner = x in (x0, x1) and z in (z0, z1)
-                if corner:
-                    put(x, y, z, "deepslate_bricks")
-                elif y % 4 == 2 and (x == x0 + 2 or z == z0 + 2) and y > S + 2:
-                    put(x, y, z, "purple_stained_glass_pane", waterlogged=False)
+                if x in (x0, x1) and z in (z0, z1):
+                    W.put(x, y, z, "stripped_oak_log" if y == S + 5 else "oak_log", axis="y")
+                elif y == S + 1:
+                    W.put(x, y, z, "stone_bricks")
+                elif y == S + 5:
+                    W.put(x, y, z, "oak_log", axis="x" if z in (z0, z1) else "z")
                 else:
-                    put(x, y, z, "stone_bricks" if y % 5 else "mossy_stone_bricks")
-    xd = x0 + 2
-    put(xd, S + 1, z1, "air"); put(xd, S + 2, z1, "air")
-    put(xd, S + 1, z1, "spruce_door", facing="south", half="lower", hinge="left", open=False, powered=False)
-    put(xd, S + 2, z1, "spruce_door", facing="south", half="upper", hinge="left", open=False, powered=False)
-    for z in range(z1 + 1, C - 1):
-        put(xd, S, z, "dirt_path"); occ.add((xd, z))
-    for y in range(S + 1, top + 1):                       # escada de mão
-        put(xd, y, z0 + 1, "ladder", facing="south", waterlogged=False)
-    for x in range(x0 + 1, x1):                           # piso do topo (com buraco para a escada)
+                    off = (x - x0) if z in (z0, z1) else (z - z0)
+                    if y in (S + 3, S + 7) and off % 3 == 1 and 0 < off < (Wd - 1 if z in (z0, z1) else D - 1) and not (x == xd and z == z1):
+                        W.put(x, y, z, "glass_pane", waterlogged=False)
+                    else:
+                        W.put(x, y, z, "oak_planks")
+    # piso do 2º andar (com buraco para a escada) e teto
+    for x in range(x0 + 1, x1):
         for z in range(z0 + 1, z1):
-            if (x, z) != (xd, z0 + 1):
-                put(x, top, z, "dark_oak_planks")
-    put(x1 - 1, top + 1, z1 - 1, "chest", nbt=CHEST, facing="north", type="single", waterlogged=False)
-    for y in (top + 1, top + 2):                          # sala de observação em vidro roxo
-        for x in range(x0, x1 + 1):
-            for z in range(z0, z1 + 1):
-                if x in (x0, x1) or z in (z0, z1):
-                    put(x, y, z, "purple_stained_glass")
-    for x in range(x0 - 1, x1 + 2):
-        for z in range(z0 - 1, z1 + 2):
-            put(x, top + 3, z, "amethyst_block")
-    put(xd, top + 4, z0 + 2, "end_rod", facing="up")
-    put(xd, top + 2, z0 + 2, "lantern", hanging=False, waterlogged=False)
-    put(xd, top + 1, z0 + 2, "air")
+            if not (x == x0 + 1 and z == z0 + 1):
+                W.put(x, S + 5, z, "spruce_planks")
+            W.put(x, S + 9, z, "spruce_planks")
+    for y in range(S + 1, S + 6):
+        W.put(x0 + 1, y, z0 + 1, "ladder", facing="south", waterlogged=False)
+    # porta principal
+    W.put(xd, S + 1, z1, "dark_oak_door", facing="south", half="lower", hinge="left", open=False, powered=False)
+    W.put(xd, S + 2, z1, "dark_oak_door", facing="south", half="upper", hinge="left", open=False, powered=False)
+    W.put(xd - 1, S + 3, z1 + 1, "red_wall_banner", facing="south"); W.put(xd + 1, S + 3, z1 + 1, "red_wall_banner", facing="south")
+    # sacada no 2º andar
+    for x in range(xd - 2, xd + 3):
+        for z in (z1 + 1, z1 + 2):
+            W.put(x, S + 5, z, "spruce_planks")
+        for z in (z1 + 1, z1 + 2):
+            if x in (xd - 2, xd + 2) or z == z1 + 2:
+                W.put(x, S + 6, z, "oak_fence")
+    for x in (xd - 2, xd + 2):
+        for y in range(S + 1, S + 5):
+            W.put(x, y, z1 + 2, "oak_fence")
+    W.put(xd, S + 6, z1, "dark_oak_door", facing="south", half="lower", hinge="left", open=False, powered=False)
+    W.put(xd, S + 7, z1, "dark_oak_door", facing="south", half="upper", hinge="left", open=False, powered=False)
+    # telhado
+    top = S + 1 + hw + 1
+    R = D + 4
+    for r in range(R):
+        z = z0 - 2 + r
+        k = min(r, R - 1 - r)
+        y = top + k
+        for x in range(x0 - 1, x1 + 2):
+            if r < R - 1 - r:
+                W.put(x, y, z, "dark_oak_stairs", facing="north", half="bottom", shape="straight", waterlogged=False)
+            elif r > R - 1 - r:
+                W.put(x, y, z, "dark_oak_stairs", facing="south", half="bottom", shape="straight", waterlogged=False)
+            else:
+                W.put(x, y, z, "dark_oak_planks")
+    for z in range(z0, z1 + 1):
+        r = z - (z0 - 2)
+        k = min(r, R - 1 - r)
+        for y in range(top + 1, top + k):
+            for x in (x0, x1):
+                W.put(x, y, z, "spruce_planks")
+    # chaminé
+    for y in range(S + 1, top + 5):
+        W.put(x1 + 1, y, z0 + 4, "stone_bricks")
+    W.put(x1 + 1, top + 5, z0 + 4, "campfire", facing="north", lit=True, signal_fire=False, waterlogged=False)
+    # --- térreo: salão do chefe
+    W.put(x0 + 3, S + 4, z0 + 5, "lantern", hanging=True, waterlogged=False); W.put(x1 - 3, S + 4, z0 + 5, "lantern", hanging=True, waterlogged=False)
+    for z in range(z0 + 2, z1):                                    # tapete vermelho até o fundo
+        W.put(xd, S + 1, z, "red_carpet")
+    for x in range(x0 + 1, x1):                                    # estantes no fundo
+        W.put(x, S + 1, z0 + 1, "bookshelf"); W.put(x, S + 2, z0 + 1, "bookshelf")
+    W.put(xd, S + 1, z0 + 1, "lectern", facing="south", has_book=False, powered=False)
+    W.put(xd, S + 2, z0 + 1, "air")
+    W.put(xd - 3, S + 1, z0 + 2, "oak_stairs", facing="south", half="bottom", shape="straight", waterlogged=False)   # trono do chefe
+    W.put(xd + 3, S + 1, z0 + 2, "oak_stairs", facing="south", half="bottom", shape="straight", waterlogged=False)
+    for dx in (-2, -1, 1, 2):                                      # mesa longa
+        W.put(xd + dx, S + 1, z0 + 6, "oak_fence"); W.put(xd + dx, S + 2, z0 + 6, "oak_pressure_plate")
+    W.put(x1 - 1, S + 1, z0 + 2, "chest", nbt=CHEST_VILA, facing="west", type="single", waterlogged=False)
+    W.put(x1 - 1, S + 1, z0 + 3, "chest", nbt=CHEST_VILA, facing="west", type="single", waterlogged=False)
+    W.put(x0 + 1, S + 1, z0 + 8, "crafting_table"); W.put(x0 + 1, S + 1, z0 + 9, "furnace", facing="east", lit=False)
+    W.put(x1 - 1, S + 1, z1 - 1, "barrel", facing="up", open=False)
+    # --- 2º andar: quartos
+    W.put(x0 + 3, S + 6, z0 + 2, "red_bed", facing="east", occupied=False, part="foot"); W.put(x0 + 4, S + 6, z0 + 2, "red_bed", facing="east", occupied=False, part="head")
+    W.put(x1 - 4, S + 6, z0 + 2, "red_bed", facing="west", occupied=False, part="foot"); W.put(x1 - 5, S + 6, z0 + 2, "red_bed", facing="west", occupied=False, part="head")
+    W.put(xd, S + 6, z0 + 1, "chest", nbt=CHEST_VILA, facing="south", type="single", waterlogged=False)
+    W.put(x0 + 4, S + 6, z0 + 6, "oak_fence"); W.put(x0 + 4, S + 7, z0 + 6, "oak_pressure_plate")
+    W.put(x1 - 4, S + 6, z0 + 6, "oak_fence"); W.put(x1 - 4, S + 7, z0 + 6, "oak_pressure_plate")
+    W.put(xd, S + 8, z0 + 5, "lantern", hanging=True, waterlogged=False)
+    villager(xd, z0 + 4); villager(xd + 2, z0 + 4, S + 6)
+    path_v(xd, z1 + 3, C - 2)
 
-
-def farm(x0, z0):
-    x1, z1 = x0 + 7, z0 + 7
+# ----------------------------------------------------------- plantações
+def farm(x0, z0, Wd, D, gate_side, gate_x, seed):
+    r = random.Random(seed)
+    x1, z1 = x0 + Wd - 1, z0 + D - 1
     for x in range(x0 - 1, x1 + 2):
         for z in range(z0 - 1, z1 + 2):
             occ.add((x, z))
+    crops = ["wheat", "carrots", "potatoes", "beetroots"]
+    r.shuffle(crops)
     for x in range(x0, x1 + 1):
         for z in range(z0, z1 + 1):
             if x in (x0, x1) or z in (z0, z1):
-                put(x, S + 1, z, "spruce_fence")
+                W.put(x, S + 1, z, "oak_fence")
             else:
-                put(x, S, z, "farmland", moisture=7)
-                crop = ["wheat", "carrots", "potatoes", "beetroots"][(z - z0) % 4]
-                put(x, S + 1, z, crop, age=3 if crop == "beetroots" else 7)
-    for x in (x0 + 3, x0 + 4):                            # água no meio
-        put(x, S, z0 + 3, "water", level=0)
-        put(x, S + 1, z0 + 3, "air")
-    put(x0 + 3, S + 1, z0, "spruce_fence_gate", facing="north", in_wall=False, open=False, powered=False)
-    put(x0 + 4, S + 1, z0, "spruce_fence_gate", facing="north", in_wall=False, open=False, powered=False)
-    put(x0 - 1, S + 1, z0 + 1, "composter", level=0)
-    put(x0 - 1, S + 1, z0 + 3, "hay_block", axis="y")
-    put(x0 - 1, S + 2, z0 + 3, "hay_block", axis="y")
-    villager(x0 + 2, z0 - 1)
-    for z in range(z0 - 2, C + 1, -1):
-        put(x0 + 3, S, z, "dirt_path"); occ.add((x0 + 3, z))
+                W.put(x, S, z, "farmland", moisture=7)
+                c = crops[(z - z0) // 2 % 4]
+                W.put(x, S + 1, z, c, age=3 if c == "beetroots" else 7)
+    wx, wz = x0 + Wd // 2, z0 + D // 2
+    W.put(wx, S, wz, "water", level=0); W.put(wx, S + 1, wz, "air")
+    gz = z0 if gate_side == "N" else z1
+    W.put(gate_x, S + 1, gz, "oak_fence_gate", facing="north", in_wall=False, open=False, powered=False)
+    W.put(x0 - 1, S + 1, z0 + 1, "composter", level=0)
+    W.put(x0 - 1, S + 1, z0 + 3, "hay_block", axis="y")
+    W.put(x1 + 1, S + 1, z1 - 1, "hay_block", axis="y")
+    W.put(x1 + 1, S + 1, z1 - 2, "pumpkin")
+    villager(x0 + 2, z0 - 1 if gate_side == "N" else z1 + 1)
+    if gate_side == "N":
+        path_v(gate_x, gz - 1, C + 2)
+    else:
+        path_v(gate_x, gz + 1, C - 2)
 
+# ----------------------------------------------------------- layout
+chief(34, 12)
 
-# ----- layout (norte = z pequeno). Estradas em x=21..23 e z=21..23
-house(3, 4, 9, 7, "S", "home")
-house(14, 3, 7, 8, "S", "library")
-house(25, 4, 9, 7, "S", "home2")
-tower(37, 4)
-house(3, 30, 9, 8, "N", "smithy")
-house(14, 31, 7, 7, "N", "home2")
-house(25, 30, 9, 8, "N", "home")
-farm(35, 31)
+simple(5, 30, "S"); medium(13, 29, "S"); medium(52, 29, "S"); simple(64, 30, "S")
+simple(22, 14, "S"); simple(72, 13, "S")
+simple(5, 45, "N"); medium(13, 45, "N"); medium(52, 45, "N"); simple(64, 45, "N")
+medium(24, 62, "N")
 
-guardian(13, 22); guardian(31, 22)
-villager(18, 18); villager(26, 26); villager(22, 17)
+farm(4, 58, 10, 8, "N", 11, 1)
+farm(60, 58, 10, 8, "N", 69, 2)
+farm(44, 58, 10, 8, "N", 46, 3)
+farm(6, 5, 10, 8, "S", 10, 4)
+farm(60, 4, 10, 8, "S", 61, 5)
 
-# ---------------------------------------------------------------- decoração
-FLOWERS = ["allium", "cornflower", "allium", "lily_of_the_valley", "azure_bluet"]
+# ----------------------------------------------------------- poço do centro (com o Braço e o Núcleo escondido)
+for x in range(C - 3, C + 4):
+    for z in range(C - 3, C + 4):
+        occ.add((x, z))
+for dx in range(-2, 3):
+    for dz in range(-2, 3):
+        m = max(abs(dx), abs(dz))
+        x, z = C + dx, C + dz
+        if m == 2:
+            W.put(x, S, z, "cobblestone")
+            W.put(x, S + 1, z, rnd.choice(["cobblestone", "mossy_cobblestone", "cobblestone"]))
+        else:
+            W.put(x, S, z, "water", level=0)
+            W.put(x, S - 1, z, "water", level=0)
+            W.put(x, S - 2, z, "stone_bricks")
+            for y in range(S + 1, S + 4):
+                W.put(x, y, z, "air")
+W.put(C, S - 3, C, "linhagens:aurora_core")                 # a fonte da aurora, escondida debaixo do poço
+W.put(C, S + 1, C, "linhagens:braco_poco")                   # a mão que sai da água
+for dx, dz in ((-2, -2), (2, -2), (-2, 2), (2, 2)):
+    W.put(C + dx, S + 2, C + dz, "oak_fence"); W.put(C + dx, S + 3, C + dz, "oak_fence")
+for dx in range(-2, 3):
+    for dz in range(-2, 3):
+        W.put(C + dx, S + 4, C + dz, "spruce_slab", type="bottom", waterlogged=False)
+W.put(C, S + 3, C - 2, "lantern", hanging=True, waterlogged=False)
+for dx, dz in ((-4, -1), (4, 1)):
+    W.entity(C + dx + 0.5, S + 1, C + dz + 0.5, mob_nbt("linhagens:aurora_guardian"))
+villager(C - 4, C + 4); villager(C + 4, C - 4); villager(C + 3, C + 5)
+
+# ----------------------------------------------------------- postes de luz e decoração
+for i in range(6, SX - 4, 10):
+    for (x, z) in ((C - 2, i), (C + 2, i), (i, C - 2), (i, C + 2)):
+        if (x, z) in occ and W.get(x, S, z) not in ("minecraft:grass_block",):
+            continue
+        if any(abs(x - C) <= 3 and abs(z - C) <= 3 for _ in [0]):
+            continue
+        for y in range(S + 1, S + 4):
+            W.put(x, y, z, "oak_fence")
+        W.put(x, S + 4, z, "lantern", hanging=False, waterlogged=False)
+        occ.add((x, z))
+
+FLOWERS = ["poppy", "dandelion", "cornflower", "allium", "azure_bluet", "oxeye_daisy"]
 for x in range(SX):
     for z in range(SZ):
-        if (x, z) in occ or get(x, S + 1, z) != M + "air":
+        if (x, z) in occ or W.get(x, S + 1, z) != "minecraft:air" or W.get(x, S, z) != "minecraft:grass_block":
             continue
         r = rnd.random()
-        if r < 0.07:
-            put(x, S + 1, z, rnd.choice(FLOWERS))
-        elif r < 0.085:
-            put(x, S + 1, z, "amethyst_cluster", facing="up", waterlogged=False)
+        if r < 0.06:
+            W.put(x, S + 1, z, rnd.choice(FLOWERS))
+        elif r < 0.12:
+            W.put(x, S + 1, z, "short_grass")
 
-# ---------------------------------------------------------------- conexões de vidraças e cercas
-SOLID = ("planks", "log", "bricks", "terracotta", "stone", "glass", "amethyst_block", "deepslate", "dirt", "grass_block",
-         "bookshelf", "crafting_table", "smithing_table", "furnace", "hay_block", "composter")
-NOT_SOLID = ("stairs", "slab", "pane", "fence", "gate", "cluster")
-
-def solid(name):
-    n = name.replace("minecraft:", "")
-    return any(s in n for s in SOLID) and not any(s in n for s in NOT_SOLID)
-
-DIRS = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
-for (x, y, z), (name, props, nbt) in list(B.items()):
-    n = name.replace("minecraft:", "")
-    kind = "pane" if n.endswith("_pane") else ("fence" if n.endswith("_fence") else None)
-    if not kind:
-        continue
-    p = dict(props)
-    for d, (dx, dz) in DIRS.items():
-        nb = get(x + dx, y, z + dz)
-        nn = nb.replace("minecraft:", "")
-        p[d] = str((kind in nn and "gate" not in nn) or (kind == "fence" and "fence_gate" in nn) or solid(nb)).lower()
-    p.setdefault("waterlogged", "false")
-    B[(x, y, z)] = (name, tuple(sorted(p.items())), nbt)
-
-# ---------------------------------------------------------------- gravar
-palette, pidx = [], {}
-blocks = []
-for (x, y, z), (name, props, nbt) in sorted(B.items(), key=lambda kv: (kv[0][1], kv[0][0], kv[0][2])):
-    key = (name, props)
-    if key not in pidx:
-        pidx[key] = len(palette)
-        d = {"Name": Str(name)}
-        if props:
-            d["Properties"] = Comp({k: Str(v) for k, v in props})
-        palette.append(Comp(d))
-    e = {"pos": Lst(3, [Int(x), Int(y), Int(z)]), "state": Int(pidx[key])}
-    if nbt is not None:
-        e["nbt"] = nbt
-    blocks.append(Comp(e))
-
-entities = []
-for (x, y, z, nbt) in ENT:
-    entities.append(Comp({"pos": Lst(6, [Dbl(x), Dbl(float(y)), Dbl(z)]),
-                          "blockPos": Lst(3, [Int(int(x)), Int(int(y)), Int(int(z))]), "nbt": nbt}))
-
-root = Comp({"DataVersion": Int(3955), "size": Lst(3, [Int(SX), Int(SY), Int(SZ)]),
-             "palette": Lst(10, palette), "blocks": Lst(10, blocks), "entities": Lst(10, entities)})
-data = struct.pack(">b", 10) + enc_str("") + enc(root)
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-with gzip.open(OUT, "wb") as f:
-    f.write(data)
-print("blocos:", len(blocks), "paleta:", len(palette), "entidades:", len(entities), "bytes:", os.path.getsize(OUT))
+W.connect()
+print("vila:", W.save(OUT))
