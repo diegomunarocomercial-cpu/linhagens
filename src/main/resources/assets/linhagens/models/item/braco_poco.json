@@ -1,0 +1,13 @@
+{
+  "parent": "linhagens:block/braco_poco",
+  "display": {
+    "gui": {
+      "rotation": [
+        20,
+        35,
+        0
+      ],
+      "scale": 0.8
+    }
+  }
+}
