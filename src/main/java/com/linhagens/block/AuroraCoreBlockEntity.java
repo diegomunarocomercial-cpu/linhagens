@@ -1,5 +1,6 @@
 package com.linhagens.block;
 
+import com.linhagens.quest.AuroraState;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.particle.DustColorTransitionParticleEffect;
@@ -43,14 +44,16 @@ public class AuroraCoreBlockEntity extends BlockEntity {
 
         Random rnd = world.random;
         double time = world.getTime();
-        int perRibbon = world.isDay() ? 6 : 16;           // bem mais intensa à noite
+        boolean boosted = AuroraState.boost > 0;
+        int perRibbon = (world.isDay() ? 6 : 16) * (boosted ? 3 : 1);   // bem mais intensa à noite e na tempestade
         double cx = pos.getX() + 0.5, cz = pos.getZ() + 0.5;
         double baseY = Math.max(pos.getY() + 38, 95);      // sempre alta no céu, mesmo se o núcleo estiver enterrado
 
-        for (int ribbon = 0; ribbon < 5; ribbon++) {
+        int ribbons = boosted ? 8 : 5;
+        for (int ribbon = 0; ribbon < ribbons; ribbon++) {
             double angle = ribbon * (Math.PI / 5.0) + 0.3;
             double cos = Math.cos(angle), sin = Math.sin(angle);
-            double offset = (ribbon - 2) * 22;             // cortinas paralelas, afastadas entre si
+            double offset = (ribbon - ribbons / 2.0) * 22;             // cortinas paralelas, afastadas entre si
             for (int i = 0; i < perRibbon; i++) {
                 double s = (rnd.nextDouble() * 2 - 1) * 90;
                 double wave = 14 * Math.sin(s * 0.045 + time * 0.010 + ribbon * 1.7)

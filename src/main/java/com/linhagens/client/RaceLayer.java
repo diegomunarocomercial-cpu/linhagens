@@ -32,7 +32,7 @@ public class RaceLayer extends FeatureRenderer<AbstractClientPlayerEntity, Playe
                        float headYaw, float headPitch) {
         if (player.isInvisible()) return;
         Race race = RaceClient.raceFor(player);
-        if (race == null || race == Race.HUMANO) return; // humano: skin original, sem alterações
+        if (race == null) return;
 
         RaceModel model = player.getSkinTextures().model() == SkinTextures.Model.SLIM ? slim : classic;
         boolean helmet = !player.getEquippedStack(EquipmentSlot.HEAD).isEmpty();

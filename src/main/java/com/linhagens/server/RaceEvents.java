@@ -37,9 +37,11 @@ public final class RaceEvents {
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            com.linhagens.quest.QuestManager.tick(server);
+            com.linhagens.quest.PianoSummon.tick(server);
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 RaceManager.tick(p, server);
-                AuroraSetBonus.tick(p, server.getTicks());
+                SetBonuses.tick(p, server.getTicks());
             }
         });
 

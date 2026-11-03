@@ -16,6 +16,7 @@ public final class ModNetworking {
         PayloadTypeRegistry.playS2C().register(StatePayload.ID, StatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenMenuPayload.ID, OpenMenuPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(SkillsPayload.ID, SkillsPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(AuroraBoostPayload.ID, AuroraBoostPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(UnlockSkillPayload.ID, UnlockSkillPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ResetSkillsPayload.ID, ResetSkillsPayload.CODEC);
     }

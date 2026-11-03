@@ -8,6 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,17 +17,20 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import org.joml.Vector3f;
 
 /**
- * Braço do Poço: uma mão pálida que sai da água do poço da Vila Aurora (modelo 3D próprio).
+ * Braço do Poço: um braço humano ensanguentado no fundo do poço da Vila Aurora.
  * Segredo: entregue uma esmeralda a ele e ele devolve uma recompensa.
  */
 public class BracoPocoBlock extends Block {
     public static final MapCodec<BracoPocoBlock> CODEC = createCodec(BracoPocoBlock::new);
-    private static final VoxelShape SHAPE = Block.createCuboidShape(4, 0, 4, 12, 16, 12);
+    private static final VoxelShape SHAPE = Block.createCuboidShape(3, 0, 3, 13, 16, 13);
+    private static final DustParticleEffect BLOOD = new DustParticleEffect(new Vector3f(0.65f, 0.02f, 0.04f), 1.2f);
 
     public BracoPocoBlock(Settings settings) {
         super(settings);
@@ -40,6 +44,14 @@ public class BracoPocoBlock extends Block {
     @Override
     protected VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
         return SHAPE;
+    }
+
+    @Override
+    public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {
+        if (random.nextInt(4) == 0) {
+            world.addParticle(BLOOD, pos.getX() + 0.5 + (random.nextDouble() - 0.5) * 0.4, pos.getY() + 0.9,
+                    pos.getZ() + 0.5 + (random.nextDouble() - 0.5) * 0.4, 0, 0.03, 0);
+        }
     }
 
     @Override

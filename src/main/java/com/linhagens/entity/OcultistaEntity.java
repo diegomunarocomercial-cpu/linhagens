@@ -72,12 +72,10 @@ public class OcultistaEntity extends BaseMonster {
 
         if (!summoned && this.getHealth() < this.getMaxHealth() * 0.5f) {
             summoned = true;
-            for (int i = 0; i < 2; i++) {
-                ImpEntity imp = new ImpEntity(ModEntities.IMP, w);
-                imp.refreshPositionAndAngles(this.getX() + (i == 0 ? 1.5 : -1.5), this.getY(), this.getZ(), this.getYaw(), 0);
-                w.spawnEntity(imp);
-                w.spawnParticles(ParticleTypes.LARGE_SMOKE, imp.getX(), imp.getY() + 1, imp.getZ(), 12, 0.3, 0.5, 0.3, 0.02);
-            }
+            DemonioMonstroEntity d = new DemonioMonstroEntity(ModEntities.DEMONIO, w);
+            d.refreshPositionAndAngles(this.getX() + 1.5, this.getY(), this.getZ(), this.getYaw(), 0);
+            w.spawnEntity(d);
+            w.spawnParticles(ParticleTypes.LARGE_SMOKE, d.getX(), d.getY() + 1, d.getZ(), 20, 0.4, 0.8, 0.4, 0.02);
             w.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON, SoundCategory.HOSTILE, 1f, 0.8f);
         }
     }

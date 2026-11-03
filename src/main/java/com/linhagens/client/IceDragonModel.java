@@ -119,9 +119,13 @@ public class IceDragonModel extends EntityModel<IceDragonEntity> {
         tail2.yaw = MathHelper.sin(animationProgress * 0.09f - 0.6f) * 0.2f;
         tail3.yaw = MathHelper.sin(animationProgress * 0.09f - 1.2f) * 0.25f;
 
-        float flap = MathHelper.sin(animationProgress * 0.08f) * 0.12f;
-        wingL.roll = 0.35f + flap;
-        wingR.roll = -0.35f - flap;
+        float flap = MathHelper.sin(animationProgress * 0.22f) * 0.55f;      // o dragão voa: asas sempre batendo
+        wingL.roll = 0.1f + flap;
+        wingR.roll = -0.1f - flap;
+        legFL.pitch = 0.5f + legFL.pitch * 0.2f;                             // patas recolhidas no voo
+        legFR.pitch = 0.5f + legFR.pitch * 0.2f;
+        legBL.pitch = -0.4f + legBL.pitch * 0.2f;
+        legBR.pitch = -0.4f + legBR.pitch * 0.2f;
     }
 
     @Override

@@ -6,7 +6,9 @@ import com.linhagens.entity.ModEntities;
 import com.linhagens.item.ModItemGroup;
 import com.linhagens.item.ModItems;
 import com.linhagens.net.ModNetworking;
+import com.linhagens.quest.QuestCommands;
 import com.linhagens.server.LinhagemCommand;
+import com.linhagens.world.ModWorld;
 import com.linhagens.server.ModAttachments;
 import com.linhagens.server.RaceEvents;
 import com.linhagens.server.SkillEvents;
@@ -39,5 +41,7 @@ public class Linhagens implements ModInitializer {
         WeaponEvents.register();
         SkillEvents.register();
         LinhagemCommand.register();
+        QuestCommands.register();
+        ModWorld.init();
     }
 }
